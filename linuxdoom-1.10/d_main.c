@@ -25,6 +25,8 @@
 //-----------------------------------------------------------------------------
 
 
+#include <stdlib.h>
+#include <unistd.h>
 static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 
 #define	BGCOLOR		7
@@ -504,7 +506,7 @@ void D_AdvanceDemo (void)
 	    if ( gamemode == retail )
 	      pagename = "CREDIT";
 	    else
-	      pagename = "HELP2";
+	      pagename = "HELP1"; // HELP2 doesn't exist in registered...
 	}
 	break;
       case 5:
@@ -572,8 +574,7 @@ void IdentifyVersion (void)
     char*	plutoniawad;
     char*	tntwad;
 
-#ifdef NORMALUNIX
-    char *home;
+
     char *doomwaddir;
     doomwaddir = getenv("DOOMWADDIR");
     if (!doomwaddir)
@@ -608,11 +609,7 @@ void IdentifyVersion (void)
     doom2fwad = malloc(strlen(doomwaddir)+1+10+1);
     sprintf(doom2fwad, "%s/doom2f.wad", doomwaddir);
 
-    home = getenv("HOME");
-    if (!home)
-      I_Error("Please set $HOME to your home directory");
-    sprintf(basedefault, "%s/.doomrc", home);
-#endif
+	sprintf(basedefault, "%s/default.cfg", doomwaddir);
 
     if (M_CheckParm ("-shdev"))
     {
@@ -648,7 +645,7 @@ void IdentifyVersion (void)
 	    D_AddFile (DEVDATA"tnt.wad");
 	else*/
 	    D_AddFile (DEVDATA"doom2.wad");
-	    
+
 	D_AddFile (DEVMAPS"cdata/texture1.lmp");
 	D_AddFile (DEVMAPS"cdata/pnames.lmp");
 	strcpy (basedefault,DEVDATA"default.cfg");
@@ -876,9 +873,10 @@ void D_DoomMain (void)
     
     if (M_CheckParm("-cdrom"))
     {
-	printf(D_CDROM);
-	mkdir("c:\\doomdata",0);
-	strcpy (basedefault,"c:/doomdata/default.cfg");
+    // Avoid messing up modern C drives
+	// printf(D_CDROM);
+	// mkdir("c:\\doomdata");
+	// strcpy (basedefault,"c:/doomdata/default.cfg");
     }	
     
     // turbo option

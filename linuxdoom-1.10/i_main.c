@@ -35,11 +35,14 @@ int
 main
 ( int		argc,
   char**	argv ) 
-{ 
-    myargc = argc; 
-    myargv = argv; 
- 
-    D_DoomMain (); 
+{
+    // SDL doesn't hook to stdout and err
+    freopen( "stdout.txt", "w", stdout );
+    freopen( "stderr.txt", "w", stderr );
+    myargc = argc;
+    myargv = argv;
+
+    D_DoomMain ();
 
     return 0;
 } 

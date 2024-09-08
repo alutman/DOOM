@@ -1,0 +1,7 @@
+cmake-build*
+lib/
+.idea/
+*.wad
+*.cfg
+stderr.txt
+stdout.txt

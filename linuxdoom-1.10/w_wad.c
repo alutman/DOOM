@@ -22,6 +22,11 @@
 //-----------------------------------------------------------------------------
 
 
+#include <ctype.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <sys/stat.h>
 static const char
 rcsid[] = "$Id: w_wad.c,v 1.5 1997/02/03 16:47:57 b1 Exp $";
 
@@ -66,12 +71,12 @@ void**			lumpcache;
 
 #define strcmpi	strcasecmp
 
-void strupr (char* s)
+void x_strupr (char* s)
 {
     while (*s) { *s = toupper(*s); s++; }
 }
 
-int filelength (int handle) 
+int x_filelength (int handle)
 { 
     struct stat	fileinfo;
     
@@ -174,7 +179,7 @@ void W_AddFile (char *filename)
 	// single lump file
 	fileinfo = &singleinfo;
 	singleinfo.filepos = 0;
-	singleinfo.size = LONG(filelength(handle));
+	singleinfo.size = LONG(x_filelength(handle));
 	ExtractFileBase (filename, singleinfo.name);
 	numlumps++;
     }
@@ -297,7 +302,7 @@ void W_InitMultipleFiles (char** filenames)
     numlumps = 0;
 
     // will be realloced as lumps are added
-    lumpinfo = malloc(1);	
+    lumpinfo = malloc(sizeof(lumpinfo));
 
     for ( ; *filenames ; filenames++)
 	W_AddFile (*filenames);
@@ -367,7 +372,7 @@ int W_CheckNumForName (char* name)
     name8.s[8] = 0;
 
     // case insensitive
-    strupr (name8.s);		
+    x_strupr (name8.s);
 
     v1 = name8.x[0];
     v2 = name8.x[1];
