@@ -80,7 +80,7 @@ typedef struct
 
 
 
-#define MAXANIMS                32
+#define MAXANIMS                1024
 
 extern anim_t	anims[MAXANIMS];
 extern anim_t*	lastanim;
@@ -138,7 +138,7 @@ anim_t*		lastanim;
 //
 //      Animating line specials
 //
-#define MAXLINEANIMS            64
+#define MAXLINEANIMS            512
 
 extern  short	numlinespecials;
 extern  line_t*	linespeciallist[MAXLINEANIMS];
