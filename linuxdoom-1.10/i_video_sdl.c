@@ -14,9 +14,19 @@ SDL_Renderer* gRenderer = NULL;
 SDL_Texture* gTexture = NULL;
 byte* currentPalette;
 
-#define scale 4
-int scaleWidth = SCREENWIDTH * scale;
-int scaleHeight = SCREENHEIGHT * scale;
+
+#define scale 5
+#define SCALE_WIDTH SCREENWIDTH * scale
+#define SCALE_HEIGHT SCREENHEIGHT * scale
+
+// doom designed aspect ratio is 1.2
+#define ASPECT_RATIO 1.2
+
+
+const SDL_Rect srcrect = {0, 0, SCREENWIDTH, SCREENHEIGHT};
+const SDL_Rect destrect = {0, 0, SCALE_WIDTH, SCALE_HEIGHT * ASPECT_RATIO};
+
+
 
 // Called by D_DoomMain,
 // determines the hardware configuration
@@ -24,11 +34,10 @@ int scaleHeight = SCREENHEIGHT * scale;
 void I_InitGraphics (void) {
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
         I_Error("init fail: %s\n", SDL_GetError());
-
     }
 
     gWindow = SDL_CreateWindow("DOOM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        scaleWidth, scaleHeight, SDL_WINDOW_INPUT_GRABBED );
+        SCALE_WIDTH, SCALE_HEIGHT * ASPECT_RATIO, SDL_WINDOW_INPUT_GRABBED );
     if( gWindow == NULL )
     {
         I_Error( "SDL_CreateWindow fail: %s\n", SDL_GetError() );
@@ -41,8 +50,9 @@ void I_InitGraphics (void) {
         I_Error("SDL_CreateRenderer fail: %s\n", SDL_GetError() );
     }
 
-    // SDL strectches textures to fill the window
-    gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, scaleWidth, scaleHeight);
+    gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
+        SCREENWIDTH, SCREENHEIGHT);
+
     if( gRenderer == NULL )
     {
         I_Error("SDL_CreateTexture fail: %s\n", SDL_GetError() );
@@ -85,28 +95,26 @@ void I_UpdateNoBlit (void) {
 // * converts the palette index to rgb
 void I_FinishUpdate (void) {
 
-    Uint32* pixels = (Uint32*)malloc(scaleWidth * scaleHeight * sizeof(Uint32));
-    for (int y = 0; y < scaleHeight; y++) {
-        for (int x = 0; x < scaleWidth; x++) {
-            const int pY = y/scale;
-            const int pX = x/scale;
-            const int palIdx = screens[0][pY * SCREENWIDTH + pX];
+    Uint32* pixels = malloc(SCREENWIDTH * SCREENHEIGHT * sizeof(Uint32));
+    for (int y = 0; y < SCREENHEIGHT; y++) {
+        for (int x = 0; x < SCREENWIDTH; x++) {
+            const int palIdx = screens[0][y * SCREENWIDTH + x];
 
             // palette data entries are 3 bytes as r,g,b
             const byte r = currentPalette[3 * palIdx + 0];
             const byte g = currentPalette[3 * palIdx + 1];
             const byte b = currentPalette[3 * palIdx + 2];
 
-            pixels[y * scaleWidth + x] = SDL_MapRGBA(SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888), r, g, b, 255);
+            pixels[y * SCREENWIDTH + x] = SDL_MapRGBA(SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888), r, g, b, 255);
         }
     }
 
-    SDL_UpdateTexture(gTexture, NULL, pixels, scaleWidth * sizeof(Uint32));
+    SDL_UpdateTexture(gTexture, NULL, pixels, SCREENWIDTH * sizeof(Uint32));
     free(pixels);
 
-
-    SDL_RenderClear(gRenderer);
-    SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
+    // Use SDL to scale the image and apply aspect ratio
+    // SDL_RenderClear(gRenderer);
+    SDL_RenderCopy(gRenderer, gTexture, &srcrect, &destrect);
     SDL_RenderPresent(gRenderer);
 }
 
