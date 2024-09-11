@@ -47,7 +47,7 @@ add_executable(DOOM
         linuxdoom-1.10/i_main.c
         linuxdoom-1.10/i_net_win.c
         linuxdoom-1.10/i_net.h
-        linuxdoom-1.10/i_sound_win.c
+        linuxdoom-1.10/i_sound_sdl.c
         linuxdoom-1.10/i_sound.h
         linuxdoom-1.10/i_system.c
         linuxdoom-1.10/i_system.h
