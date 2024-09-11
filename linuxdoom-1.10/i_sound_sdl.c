@@ -14,8 +14,9 @@ extern int	numChannels;
 
 typedef struct
 {
-  char		header[4];
-  int		num_samples;
+  char		header[2];
+  int16_t     sample_rate;
+  int32_t		  num_samples;
   byte		data;
 
 } pcm_data;
@@ -75,7 +76,6 @@ uint8_t capMix(int16_t mix) {
   return mix > 255 ? 255 : mix < 0 ? 0 : mix;
 }
 
-
 void audio_callback(void* userdata, Uint8* stream, int len) {
   for(int l = 0; l < len; l += 2) {
     int16_t mixed_l = 0;
@@ -91,10 +91,15 @@ void audio_callback(void* userdata, Uint8* stream, int len) {
 
       pcm_data* sfxData = ac->sfx->data;
       if (ac->data_idx < sfxData->num_samples) {
-        uint8_t sample = (&sfxData->data)[ac->data_idx];
+        uint8_t sample = (&sfxData->data)[ac->data_idx++];
+        // ssg reload has a doubled sample rate
+        // hack to down-sample back to 11025
+        if (sfxData->sample_rate == SND_FREQ*2) {
+          ac->data_idx++;
+        }
+
         uint8_t left;
         uint8_t right;
-        ac->data_idx += 1;
         processSample(sample, ac->vol, ac->sep, &left, &right);
 
         // move to signed and add to the mix
@@ -192,24 +197,6 @@ I_StartSound
   int		sep,
   int		pitch,
   int		priority ) {
-
-  // limit sound effects to one for mostly the chainsaw
-  if ( sfxid == sfx_sawup
-    || sfxid == sfx_sawidl
-    || sfxid == sfx_sawful
-    || sfxid == sfx_sawhit
-    || sfxid == sfx_stnmov
-    ) {
-    for (int i=0; i < numChannels; i++)
-    {
-      audio_channel* ac = &audio_channels[i+1];
-      if (ac->sfxid == sfxid) {
-        ac->sfxid = 0;
-        break;
-      }
-    }
-  }
-
 
   // look for empty channel
   for(int i = 0; i < numChannels; i++) {
