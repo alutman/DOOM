@@ -206,6 +206,8 @@ extern int	showMessages;
 // machine-independent sound params
 extern	int	numChannels;
 
+extern	int	scale;
+
 
 // UNIX hack, to be removed.
 #ifdef SNDSERV
@@ -283,6 +285,8 @@ default_t	defaults[] =
 
 
     {"usegamma",&usegamma, 0},
+
+	{"scale",&scale, 5},
 
 	// TODO fix: m_misc.c:287:45: error: initializer element is not constant
     // {"chatmacro0", (int *) &chat_macros[0], (int) HUSTR_CHATMACRO0 },

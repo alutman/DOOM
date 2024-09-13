@@ -15,17 +15,18 @@ SDL_Texture* gTexture = NULL;
 byte* currentPalette;
 
 
-#define scale 5
-#define SCALE_WIDTH SCREENWIDTH * scale
-#define SCALE_HEIGHT SCREENHEIGHT * scale
+
+int scale;
+
+int scaleWidth;
+int scaleHeight;
 
 // doom designed aspect ratio is 1.2
 #define ASPECT_RATIO 1.2
 
 
-const SDL_Rect srcrect = {0, 0, SCREENWIDTH, SCREENHEIGHT};
-const SDL_Rect destrect = {0, 0, SCALE_WIDTH, SCALE_HEIGHT * ASPECT_RATIO};
-
+SDL_Rect* srcrect;
+SDL_Rect* destrect;
 
 
 // Called by D_DoomMain,
@@ -33,11 +34,53 @@ const SDL_Rect destrect = {0, 0, SCALE_WIDTH, SCALE_HEIGHT * ASPECT_RATIO};
 // and sets up the video mode
 void I_InitGraphics (void) {
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-        I_Error("init fail: %s\n", SDL_GetError());
+        I_Error("SDL_Init fail: %s\n", SDL_GetError());
     }
 
+
+    // div by 2 gives more control over the screen size
+    float realScale = (float)scale/(float)2;
+
+    // set scale minimum
+    if (realScale < 1) {
+        realScale = 1;
+    }
+
+    int displayIndex = 0;
+    SDL_DisplayMode current;
+
+    if (SDL_GetCurrentDisplayMode(displayIndex, &current) != 0) {
+        I_Error("SDL_GetCurrentDisplayMode Error: %s\n", SDL_GetError());
+    }
+
+    // set scale maximum
+    if (SCREENWIDTH * realScale > current.w) {
+        realScale = current.w / realScale;
+    }
+    if (SCREENHEIGHT * realScale > current.h) {
+        realScale = current.h / realScale;
+    }
+
+
+    scaleWidth = SCREENWIDTH * (realScale);
+    scaleHeight = SCREENHEIGHT * (realScale);
+
+    srcrect = malloc(sizeof(SDL_Rect));
+    if (srcrect == NULL) {
+        I_Error("malloc fail in srcrect");
+    }
+    destrect = malloc(sizeof(SDL_Rect));
+    if (destrect == NULL) {
+        I_Error("malloc fail in destrect");
+    }
+
+    // source renderer to output display translation rectangles
+    *destrect = (SDL_Rect){0, 0, scaleWidth, scaleHeight * ASPECT_RATIO};
+    *srcrect =  (SDL_Rect){0, 0, SCREENWIDTH, SCREENHEIGHT};
+
+
     gWindow = SDL_CreateWindow("DOOM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        SCALE_WIDTH, SCALE_HEIGHT * ASPECT_RATIO, SDL_WINDOW_INPUT_GRABBED );
+        scaleWidth, scaleHeight * ASPECT_RATIO, SDL_WINDOW_INPUT_GRABBED );
     if( gWindow == NULL )
     {
         I_Error( "SDL_CreateWindow fail: %s\n", SDL_GetError() );
@@ -58,7 +101,7 @@ void I_InitGraphics (void) {
         I_Error("SDL_CreateTexture fail: %s\n", SDL_GetError() );
     }
 
-    //
+    // lock mouse to screen
     if( SDL_SetRelativeMouseMode(SDL_TRUE) < 0 )
     {
         I_Error("SDL_SetRelativeMouseMode fail: %s\n", SDL_GetError() );
@@ -114,7 +157,7 @@ void I_FinishUpdate (void) {
 
     // Use SDL to scale the image and apply aspect ratio
     // SDL_RenderClear(gRenderer);
-    SDL_RenderCopy(gRenderer, gTexture, &srcrect, &destrect);
+    SDL_RenderCopy(gRenderer, gTexture, srcrect, destrect);
     SDL_RenderPresent(gRenderer);
 }
 
